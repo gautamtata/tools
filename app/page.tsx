@@ -96,6 +96,12 @@ const tools = [
     href: "/tools/html-to-jsx",
     icon: "🔄",
   },
+  {
+    title: "Image Converter",
+    description: "Convert between HEIC, PNG, JPG, WebP and resize images to fit upload limits.",
+    href: "/tools/image-converter",
+    icon: "🖼️",
+  },
 ];
 
 function ToolsPage() {
