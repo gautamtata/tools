@@ -86,7 +86,7 @@ export default function ImageConverterPage() {
     try {
       let imageBlob: Blob = file;
 
-      // Convert HEIC/HEIF to PNG for display
+      // Convert HEIC/HEIF server-side using heic-convert
       const isHeic =
         file.type === "image/heic" ||
         file.type === "image/heif" ||
@@ -94,13 +94,22 @@ export default function ImageConverterPage() {
         file.name.toLowerCase().endsWith(".heif");
 
       if (isHeic) {
-        const heic2any = (await import("heic2any")).default;
-        const converted = await heic2any({
-          blob: file,
-          toType: "image/png",
-          quality: 1,
+        setError(""); // clear any previous
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const res = await fetch("/api/convert-heic", {
+          method: "POST",
+          body: formData,
         });
-        imageBlob = Array.isArray(converted) ? converted[0] : converted;
+
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.error || "Failed to convert HEIC file");
+        }
+
+        const pngBlob = await res.blob();
+        imageBlob = pngBlob;
       }
 
       const url = URL.createObjectURL(imageBlob);
@@ -115,8 +124,8 @@ export default function ImageConverterPage() {
       img.src = url;
 
       setOriginalImage(url);
-    } catch {
-      setError("Failed to read image. If this is a HEIC file, it may not be supported in this browser.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to read image.");
     }
   }, []);
 
